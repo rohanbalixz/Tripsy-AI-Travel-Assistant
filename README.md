@@ -1,5 +1,7 @@
 # Tripsy AI Travel Assistant ✈️🤖
 
+![WORKFLOW](workflow.png)
+
 Tripsy is an **AI-powered travel assistant** that helps users plan trips, discover destinations, and generate personalized itineraries.  
 It integrates **local LLMs (Ollama + LLaMA 3.1)** with a **FastAPI backend** and a **Next.js frontend**, using **DuckDuckGo Web Search RAG** for up-to-date travel recommendations.
 
