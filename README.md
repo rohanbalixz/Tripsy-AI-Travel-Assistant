@@ -1,4 +1,4 @@
-# Tripsy AI Travel Assistant ✈️🤖
+# Tripsy AI Travel Assistant ✈️
 
 ![WORKFLOW](workflow.png)
 
@@ -7,7 +7,7 @@ It integrates **local LLMs (Ollama + LLaMA 3.1)** with a **FastAPI backend** and
 
 ---
 
-## 🚀 Features
+## Features
 - Interactive **chat-based travel assistant**
 - **Web search integration** for live information (DuckDuckGo)
 - **Retrieval-Augmented Generation (RAG)** pipeline for contextual accuracy
@@ -19,7 +19,7 @@ It integrates **local LLMs (Ollama + LLaMA 3.1)** with a **FastAPI backend** and
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 ### Backend
 - **FastAPI** (Python)
 - **Uvicorn** (ASGI server)
@@ -40,7 +40,7 @@ It integrates **local LLMs (Ollama + LLaMA 3.1)** with a **FastAPI backend** and
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### 1. Clone Repository
 ```bash
@@ -71,7 +71,7 @@ Backend runs on [http://127.0.0.1:8012](http://127.0.0.1:8012)
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 ```
 Tripsy-AI-Travel-Assistant/
 ├── tripsy/                # Backend (FastAPI + RAG + LLM)
@@ -93,7 +93,7 @@ Tripsy-AI-Travel-Assistant/
 
 ---
 
-## 💡 Example Queries
+## Example Queries
 ```bash
 curl -X POST http://127.0.0.1:8012/ask   -H "Content-Type: application/json"   -d '{"message":"Best sector to shop in Indore?"}'
 
@@ -102,7 +102,7 @@ curl -X POST http://127.0.0.1:8012/ask   -H "Content-Type: application/json"   -
 
 ---
 
-## 🌍 Future Enhancements
+## Future Enhancements
 - Add **flight & hotel booking APIs**
 - Multi-lingual support
 - Voice interaction
@@ -110,5 +110,5 @@ curl -X POST http://127.0.0.1:8012/ask   -H "Content-Type: application/json"   -
 
 ---
 
-## 📜 License
+## License
 MIT License © 2025 [Rohan Bali](https://github.com/rohanbalixz)
