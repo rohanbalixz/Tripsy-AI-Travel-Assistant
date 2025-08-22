@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+.npm/
+.next/
+dist/
+out/
+*.log
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+
+# Build / caches
+coverage/
+.cache/
+**/.DS_Store
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Env / secrets
+.env
+.env.*

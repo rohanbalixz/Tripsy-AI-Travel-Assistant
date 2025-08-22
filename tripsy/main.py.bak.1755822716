@@ -1,0 +1,24 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+from .rag_engine import retrieve_and_answer
+
+app = FastAPI()
+
+class AskPayload(BaseModel):
+    message: str
+
+@app.post("/ask")
+async def ask(payload: AskPayload):
+    user_message = payload.message.strip()
+
+    #Greeting logic
+    if not user_message or user_message.lower() in ["hi", "hello", "hey"]:
+        return {"answer": "Hi, I am Tripsy, how can I make you fall in love with our world?"}
+
+    # Otherwise normal pipeline
+    answer = retrieve_and_answer(user_message)
+    return {"answer": answer}
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

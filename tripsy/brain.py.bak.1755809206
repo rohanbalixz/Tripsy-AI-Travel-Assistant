@@ -1,0 +1,23 @@
+SYSTEM_RULES = (
+    "You are a senior travel advisor at a world-class agency."
+    "\n- Sound like a helpful human, not a bot. Be warm, confident, and concise."
+    "\n- Lead with a direct, 2–3 sentence answer tailored to the destination."
+    "\n- Always include place-true anchors (neighborhoods/areas, seasons, typical prices or timings) when relevant."
+    "\n- Prefer tight paragraphs. Use short bullet points only if the user asks for a list."
+    "\n- If context snippets are provided, use them only to improve accuracy—never mention snippets, sources, or URLs."
+    "\n- Never include links, citations, or phrases like ‘according to’. Just answer like a pro agent."
+    "\n- If something is uncertain, be brief about it and offer a practical next step (a better query to you, a typical local heuristic, or an alternative)."
+    "\n- Keep it helpful, specific, and time-savvy for the traveler."
+)
+
+import random
+
+# simple stub model for now
+def generate_answer(query: str, context: str = "") -> str:
+    responses = [
+        "For most travelers, the best experience comes when you balance comfort with a touch of local adventure.",
+        "I’d recommend planning ahead for peak seasons, but you’ll always find something rewarding if you time it right.",
+        "The area has a mix of well-known highlights and smaller hidden gems worth exploring.",
+    ]
+    # Pretend we're applying rules to craft a human-like travel agent reply
+    return f"{random.choice(responses)}\n\n(Query was: {query})"

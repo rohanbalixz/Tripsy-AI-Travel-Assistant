@@ -1,0 +1,28 @@
+import time, json
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+
+class RequestLogMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path != "/ask":
+            return await call_next(request)
+        start = time.time()
+        body = await request.body()
+        try:
+            payload = json.loads(body.decode() or "{}")
+        except:
+            payload = {}
+        msg = payload.get("message","")
+        response = await call_next(request)
+        took = (time.time()-start)*1000
+        # app.state.flags can be set by your handler for RAG/web-mode markers
+        flags = getattr(request.app.state, "last_flags", {})
+        request.app.logger.info(json.dumps({
+            "path": "/ask",
+            "len_msg": len(msg),
+            "rag_hit": flags.get("rag_hit", False),
+            "web_mode": flags.get("web_mode", False),
+            "model": flags.get("model",""),
+            "latency_ms": round(took,1)
+        }))
+        return response

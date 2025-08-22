@@ -1,0 +1,55 @@
+from __future__ import annotations
+
+import os
+from .brain import generate_answer
+from .web_search import web_search
+from .intent import detect_intent
+
+
+def retrieve_and_answer(query: str) -> str:
+    """
+    Answer a user query using (in priority):
+      1) Lightweight intent handling for greetings/thanks/confusion.
+      2) Retrieved context (placeholder for Milvus or similar).
+      3) Live web snippets (if TRIPSY_USE_WEB isn't disabled).
+      4) General model answer as final fallback.
+    """
+    # --- 1) Fast intent handling ---
+    intent = detect_intent(query)
+    if intent in {"greeting", "smalltalk"}:
+        return "Hey! Where are you thinking of going—or want me to pitch a couple of ideas?"
+    if intent == "thanks":
+        return "Anytime! Want me to sketch a quick plan or hunt great stays for you?"
+    if intent == "confused":
+        return "Got you. Tell me the place, dates, and vibe (relax/adventure/food), and I’ll tailor it fast."
+
+    # --- 2) Retrieved context (hook up Milvus here if available) ---
+    retrieved_context = ""  # TODO: replace with real RAG lookup
+
+    # --- 3) If no context, optionally do web search grounding ---
+    if not (retrieved_context or "").strip():
+        use_web_env = os.getenv("TRIPSY_USE_WEB", "1").strip().lower()
+        use_web = use_web_env not in {"0", "false", "no"}
+        if use_web:
+            hits = web_search(query, max_results=5)
+            if hits:
+                ctx_lines = []
+                for h in hits:
+                    title = (h.get("title") or "").strip()
+                    body = (h.get("body") or "").strip()
+                    if title or body:
+                        # Keep snippets; do NOT expose URLs in the prompt
+                        ctx_lines.append(f"[{title}] {body}")
+                if ctx_lines:
+                    web_ctx = "\n".join(ctx_lines[:5])
+                    return generate_answer(
+                        query,
+                        context=(
+                            "Use these recent web snippets to improve factual accuracy. "
+                            "Do NOT mention sources or URLs. Keep it warm, concise (2–4 sentences), like a human advisor.\n\n"
+                            + web_ctx
+                        ),
+                    )
+
+    # --- 4) Final fallback: general answer (with any retrieved_context if present) ---
+    return generate_answer(query, context=retrieved_context or None)

@@ -1,0 +1,46 @@
+import os, requests, json
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+MODEL_FILE = ".ollama_model.ok"
+
+def _model_name():
+    if os.path.exists(MODEL_FILE):
+        with open(MODEL_FILE, "r") as f:
+            return f.read().strip()
+    return "mistral:7b-instruct"
+
+SYSTEM_RULES = (
+    "You are a concise, factual travel assistant.\n"
+    "- Prefer bullet points and specifics over fluff.\n"
+    "- If web snippets are provided, ground your answer in them.\n"
+    "- Do not hedge with 'I couldn't find' if snippets exist—synthesize.\n"
+    "- Include a short 'Sources:' line listing domains you used, when web context is present.\n"
+    "- Keep answers under 8 sentences unless the question needs more detail."
+)
+
+def generate_answer(query: str, context: str | None):
+    model = _model_name()
+    prompt = (
+        f"System:\n{SYSTEM_RULES}\n\n"
+        f"User question: {query}\n\n"
+    )
+    if context:
+        prompt += f"Web/context snippets:\n{context}\n\n"
+    prompt += "Answer:\n"
+
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "options": {
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "repeat_penalty": 1.05,
+        },
+        "stream": False,
+    }
+    r = requests.post(f"{OLLAMA_URL}/api/generate", json=payload, timeout=120)
+    r.raise_for_status()
+    data = r.json()
+    # Ollama returns {'response': '...'} possibly across chunks; ensure 'response'
+    text = data.get("response", "").strip()
+    return text or "Sorry, I couldn't generate an answer."
