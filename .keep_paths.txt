@@ -1,0 +1,7 @@
+tripsy
+backend
+src
+tripsy-neo
+requirements.txt
+Dockerfile
+.gitignore

@@ -12,3 +12,12 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+# large/ephemeral stuff
+volumes/
+milvus/
+data/
+backups/
+*.wal
+*.sst
+*.log
+*.tmp

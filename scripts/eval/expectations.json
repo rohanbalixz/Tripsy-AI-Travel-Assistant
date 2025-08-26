@@ -1,0 +1,13 @@
+{
+  "required_facts": {
+    "chandigarh_sector": ["Sector 17"],
+    "paris_october": ["October", "mild", "crowds"],
+    "morocco_solo": ["common-sense", "precautions"]
+  },
+  "banned_patterns": [
+    "http://", "https://", "according to", "source:", "sources:", "lonely planet", "tripadvisor"
+  ],
+  "max_lead_sentences": 3,
+  "min_chars": 200,
+  "max_chars": 1200
+}

@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: infra/docker/app.Dockerfile
+    ports:
+      - "8012:8012"
+    environment:
+      MILVUS_HOST: milvus
+      MILVUS_PORT: "19530"
+    depends_on:
+      - milvus

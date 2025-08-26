@@ -1,0 +1,121 @@
+import os
+from pymilvus import connections, utility, FieldSchema, CollectionSchema, DataType, Collection
+
+MILVUS_HOST = os.getenv("MILVUS_HOST", "127.0.0.1")
+MILVUS_PORT = os.getenv("MILVUS_PORT", "19530")
+COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "tripsy_chunks")
+EMBED_DIM = int(os.getenv("EMBED_DIM", "768"))  # match your embed model dim
+
+# Connect once
+connections.connect(alias="default", host=MILVUS_HOST, port=MILVUS_PORT)
+
+def get_collection():
+    if not utility.has_collection(COLLECTION_NAME):
+        # Define schema if collection is absent
+        fields = [
+            FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=8192),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=EMBED_DIM),
+        ]
+        schema = CollectionSchema(fields, description="Tripsy RAG chunks")
+        coll = Collection(name=COLLECTION_NAME, schema=schema)
+        coll.create_index(
+            field_name="embedding",
+            index_params={"index_type": "IVF_FLAT", "metric_type": "COSINE", "params": {"nlist": 1024}},
+        )
+        coll.load()
+        return coll
+
+    # If it exists, ensure it has an index and is loaded
+    coll = Collection(COLLECTION_NAME)
+    try:
+        coll.indexes  # will raise if none
+    except Exception:
+        coll.create_index(
+            field_name="embedding",
+            index_params={"index_type": "IVF_FLAT", "metric_type": "COSINE", "params": {"nlist": 1024}},
+        )
+    coll.load()
+    return coll
+
+# Expose a ready-to-use collection at import time
+collection = get_collection()
+
+# --- added by patch: search_chunks wrapper for Tripsy ---
+from typing import List
+import os
+
+try:
+    # If an older function exists, alias it to the new name for compatibility
+    # e.g., if the module defined search_docs(query, top_k)
+    search_docs  # type: ignore
+    def search_chunks(query: str, top_k: int = 5):
+        return search_docs(query, top_k)  # type: ignore
+except NameError:
+    # Fallback: implement a Milvus + SentenceTransformers search
+    from pymilvus import connections, Collection
+    from sentence_transformers import SentenceTransformer
+
+    MILVUS_HOST = os.getenv("MILVUS_HOST", "127.0.0.1")
+    MILVUS_PORT = os.getenv("MILVUS_PORT", "19530")
+    COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "tripsy_docs")
+    EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-ai/nomic-embed-text-v1")
+
+    _model = None
+    _collection = None
+
+    def _get_model():
+        global _model
+        if _model is None:
+            # trust_remote_code=True is required for some HF models (e.g., nomic-*)
+            _model = SentenceTransformer(EMBED_MODEL, trust_remote_code=True)
+        return _model
+
+    def _get_collection():
+        global _collection
+        if _collection is None:
+            connections.connect(host=MILVUS_HOST, port=MILVUS_PORT)
+            _collection = Collection(COLLECTION_NAME)
+            _collection.load()
+        return _collection
+
+    def search_chunks(query: str, top_k: int = 5) -> List[dict]:
+        """
+        Returns a list of {id, text, source, score} for the best-matching chunks.
+        Expects Milvus schema fields: embedding (vector), text (str), id (int/str), source (str).
+        """
+        model = _get_model()
+        col = _get_collection()
+
+        # Create normalized query embedding
+        vec = model.encode([query], normalize_embeddings=True).tolist()
+
+        # Adjust params/fields to your schema if different
+        results = col.search(
+            data=vec,
+            anns_field="embedding",
+            param={"metric_type": "COSINE"},  # IP for normalized vectors (cosine equivalent)
+            limit=top_k,
+            output_fields=["id","text"]
+        )
+
+        hits = results[0]
+        out = []
+        for h in hits:
+            # be defensive: entity row data access can vary by pymilvus version
+            row = {}
+            try:
+                row = h.entity._row_data  # type: ignore[attr-defined]
+            except Exception:
+                try:
+                    # newer API: dict-like
+                    row = {k: h.entity.get(k) for k in ["id", "text", "source"]}
+                except Exception:
+                    pass
+
+            out.append({
+                "id": row.get("id"),
+                "text": row.get("text"),"score": float(h.score),
+            })
+        return out
+# --- end patch ---

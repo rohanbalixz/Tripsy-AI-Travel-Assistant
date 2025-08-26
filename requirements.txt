@@ -1,0 +1,8 @@
+# Extra dependencies for nomic-bert-2048 + sentence-transformers
+einops>=0.6.0
+transformers>=4.36.0
+sentence-transformers>=2.2.2
+torch>=2.0.0
+beautifulsoup4
+httpx
+requests>=2.31.0
