@@ -1,0 +1,14 @@
+# build & deps
+node_modules/
+.next/
+dist/
+dump/
+*.log
+.env*
+# large services/data
+volumes/
+backups/
+data/
+# OS
+.DS_Store
+Thumbs.db
