@@ -1,0 +1,165 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Bubble } from "@/components/ui/bubble"
+import { Logo, Dots } from "@/components/ui/icon"
+import { ask } from "@/lib/ask"
+
+type Msg = { id: string; text: string; mine?: boolean; typing?: boolean }
+
+export default function Page() {
+  const [msg, setMsg] = useState("")
+  const [items, setItems] = useState<Msg[]>([
+    { id: "m1", text: "Sure! I'll create an itinerary for you." },
+    { id: "m2", text: "Here’s a suggested plan for your trip." },
+    { id: "m3", text: "That looks great, thanks!", mine: true },
+    { id: "m4", text: "You're welcome!" },
+  ])
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
+  }, [items])
+
+  async function send() {
+    const content = msg.trim()
+    if (!content) return
+    const tempId = crypto.randomUUID()
+    setItems((s) => [...s, { id: tempId, text: content, mine: true }, { id: "typing", text: "…", typing: true }])
+    setMsg("")
+    try {
+      const answer = await ask(content)
+      setItems((s) => s.filter((i) => i.id !== "typing").concat({ id: crypto.randomUUID(), text: answer }))
+    } catch (e: any) {
+      setItems((s) => s.filter((i) => i.id !== "typing").concat({ id: crypto.randomUUID(), text: "Hmm, I couldn’t reach the travel brain. Try again in a moment?" }))
+    }
+  }
+
+  function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      send()
+    }
+  }
+
+  return (
+    <main className="min-h-screen py-6">
+      <div className="container-app">
+        <div className="rounded-3xl overflow-hidden shadow-soft bg-sand">
+          {/* Header */}
+          <div className="flex items-center justify-between bg-coral px-4 sm:px-6 py-4">
+            <Logo />
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-2 rounded-pill bg-white/30 px-3 py-1 text-sm text-white font-semibold shadow-soft">
+                <span className="inline-block h-2 w-2 rounded-full bg-banana shadow-[0_0_0_3px_rgba(255,255,255,0.5)]"></span>
+                120XP
+              </span>
+              <button className="rounded-full w-8 h-8 bg-white/40 text-white font-bold">+</button>
+            </div>
+          </div>
+
+          {/* Main grid – stacks on mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 bg-coral/10 p-4 sm:p-6">
+            {/* Left hero */}
+            <section className="lg:col-span-7">
+              <div className="card overflow-hidden">
+                {/* maintain aspect on mobile, taller on desktop */}
+                <div className="relative aspect-[16/13] sm:aspect-[16/10] lg:h-[440px]">
+                  {/* Left image with rounded top-right corner on md+ */}
+                  <div className="absolute inset-0 lg:right-[220px] bg-[url('https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center rounded-tr-[0px] lg:rounded-tr-[120px]" />
+
+                  {/* Teal map panel (hidden on xs to save space) */}
+                  <div className="hidden lg:block absolute top-0 right-0 h-full w-[220px] bg-[url('/svg/map-panel.svg')] bg-no-repeat bg-center" />
+
+                  {/* Copy block */}
+                  <div className="absolute left-4 sm:left-6 top-6 sm:top-8 max-w-[480px] pr-4">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-[0_2px_0_rgba(0,0,0,0.1)] leading-[1.05]">
+                      Plan your <br/> next trip
+                    </h1>
+
+                    <div className="mt-4 sm:mt-6 glass rounded-2xl px-4 sm:px-5 py-3 sm:py-4 text-[14px] sm:text-[15px]">
+                      Plan a 5-day beach adventure in Florida for $600
+                    </div>
+
+                    <button className="btn-primary mt-4 sm:mt-6">Get Started</button>
+                  </div>
+                </div>
+
+                {/* Itinerary rail */}
+                <div className="-mt-6 sm:-mt-8 px-3 sm:px-6 pb-4 sm:pb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    {[
+                      { day: "Day 1", desc: "Arrival" },
+                      { day: "Day 2", desc: "Beach Day" },
+                      { day: "Day 3", desc: "Explore Miami" },
+                    ].map((d, i) => (
+                      <div key={i} className="rounded-3xl bg-coral/90 p-1.5">
+                        <div className="card px-4 py-3 sm:px-5 sm:py-4">
+                          <div className="text-base sm:text-lg font-extrabold">{d.day}</div>
+                          <div className="text-neutral-600 text-sm sm:text-base">{d.desc}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Right chat */}
+            <aside className="lg:col-span-5">
+              <div className="card flex h-[420px] sm:h-[480px] lg:h-[520px] flex-col overflow-hidden bg-teal">
+                {/* chat header */}
+                <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4">
+                  <h2 className="text-white font-extrabold text-lg sm:text-xl">Travel Buddy</h2>
+                  <button className="opacity-90"><Dots /></button>
+                </div>
+
+                {/* chat body */}
+                <div ref={scrollRef} className="flex-1 rounded-t-3xl bg-mint p-3 sm:p-4 overflow-y-auto">
+                  <div className="space-y-3 sm:space-y-4">
+                    {items.map((m) => (
+                      <div key={m.id} className={m.mine ? "flex justify-end" : "flex"}>
+                        <div className={m.typing ? "max-w-[80%] rounded-2xl px-4 py-3 bg-bubble text-ink shadow-soft" : ""}>
+                          {m.typing ? (
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block w-2 h-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:-0.2s]"></span>
+                              <span className="inline-block w-2 h-2 rounded-full bg-neutral-400 animate-bounce"></span>
+                              <span className="inline-block w-2 h-2 rounded-full bg-neutral-400 animate-bounce [animation-delay:0.2s]"></span>
+                            </div>
+                          ) : (
+                            <Bubble mine={m.mine}>{m.text}</Bubble>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* chat input */}
+                <div className="bg-mint/80 px-3 sm:px-4 py-3">
+                  <div className="flex items-center gap-2 bg-white rounded-pill px-2 sm:px-3 py-1.5 sm:py-2">
+                    <input
+                      value={msg}
+                      onChange={(e) => setMsg(e.target.value)}
+                      onKeyDown={onKey}
+                      placeholder="Start a message"
+                      className="flex-1 bg-transparent focus:outline-none placeholder:text-neutral-400 text-[15px]"
+                    />
+                    <button
+                      className="grid place-items-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-teal text-white"
+                      onClick={send}
+                      aria-label="Send"
+                    >
+                      ➤
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}

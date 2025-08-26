@@ -1,0 +1,23 @@
+import urllib.parse, requests
+from bs4 import BeautifulSoup
+
+def web_search(query: str, max_results: int = 6):
+    q = urllib.parse.quote_plus(query)
+    url = f"https://duckduckgo.com/html/?q={q}&kp=-2"  # kp=-2 no region boost
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh) AppleWebKit/537.36 "
+                      "(KHTML, like Gecko) Chrome Safari"
+    }
+    r = requests.get(url, headers=headers, timeout=12)
+    r.raise_for_status()
+    soup = BeautifulSoup(r.text, "lxml")
+    results = []
+    for res in soup.select("div.result")[:max_results]:
+        a = res.select_one("a.result__a")
+        snip = res.select_one("a.result__snippet") or res.select_one("div.result__snippet")
+        href = a["href"] if a and a.has_attr("href") else ""
+        title = a.get_text(" ", strip=True) if a else ""
+        body  = snip.get_text(" ", strip=True) if snip else ""
+        if href and title:
+            results.append({"title": title, "href": href, "body": body})
+    return results

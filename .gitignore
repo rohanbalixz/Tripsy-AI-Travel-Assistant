@@ -1,0 +1,21 @@
+node_modules/
+.next/
+dump/
+*.log
+__pycache__/
+# Build and deps
+dump/
+node_modules/
+.next/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+dump/
+node_modules/
+.next/

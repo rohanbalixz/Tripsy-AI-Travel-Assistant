@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* app shell */
+html, body, :root { height: 100%; }
+body { background: #07090B; color: #e5e7eb; }
+
+/* Leaflet styles */
+@import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+
+/* containers */
+.tripsy-shell { @apply min-h-dvh w-full; }
+.tripsy-wrap { @apply mx-auto max-w-[1200px] px-5 pb-10; }
+.tripsy-card { @apply rounded-2xl border border-emerald-900/40 bg-[#0B1011] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]; }
+.tripsy-grid { @apply grid gap-6; grid-template-columns: 1fr; }
+@media (min-width: 768px) {
+  .tripsy-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* fixed heights to stop tile overflow */
+.h-pane { height: 78dvh; }
+.right-split { @apply grid gap-3; grid-template-rows: 1fr 1fr; height: 78dvh; }
+
+/* chat scroll */
+.chat-scroll { @apply flex-1 overflow-y-auto space-y-3 pr-1; }
+
+/* inputs */
+.tripsy-input { @apply flex-1 rounded-xl bg-[#0E1315] px-3 py-2 text-sm outline-none ring-1 ring-zinc-700/30 focus:ring-emerald-500/50; }
+.tripsy-btn { @apply rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium hover:bg-emerald-500; }

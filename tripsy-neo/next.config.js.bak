@@ -1,0 +1,13 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // DEV-SAFE: no basePath/assetPrefix/export
+  reactStrictMode: true,
+  // Leave output undefined in dev; 'export' breaks _next/* in dev
+  // output: undefined,
+  // assetPrefix: undefined,
+  // basePath: '',
+  // Keep turbopack off while debugging
+  experimental: { optimizeCss: true },
+  // Don’t rewrite Next’s _next assets
+};
+module.exports = nextConfig;
