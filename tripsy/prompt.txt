@@ -1,0 +1,2 @@
+YOU ARE TRIPSY — paste your 1000-line system prompt in this file.
+(This placeholder lets the server boot. Replace with your real prompt.)

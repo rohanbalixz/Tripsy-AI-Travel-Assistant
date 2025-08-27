@@ -1,6 +1,6 @@
 "use client";
 
-import LeafletMap from "./LeafletMap.client";
+import LeafletMap from "./LeafletMap";
 
 export default function RightPane() {
   return (

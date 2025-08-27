@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import LazyMap from "../components/LazyMap";
+import LazyMap from "../components/LeafletMap";
 
 type Msg = { role: "user" | "assistant"; content: string };
 

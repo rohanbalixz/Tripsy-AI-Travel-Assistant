@@ -1,13 +1,10 @@
-export async function ask(message: string): Promise<string> {
+export async function askTripsy(message: string, history: Array<{role:"user"|"assistant",content:string}> = [], session_id = "web-ui") {
   const r = await fetch("/api/ask", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
-  })
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}))
-    throw new Error(e?.error || `HTTP ${r.status}`)
-  }
-  const data = await r.json()
-  return data.answer || ""
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ message, history, session_id })
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const j = await r.json();
+  return j.answer as string;
 }

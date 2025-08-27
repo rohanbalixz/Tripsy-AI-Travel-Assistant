@@ -1,0 +1,99 @@
+"use client";
+export const dynamic = "force-dynamic";
+
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+const MapPane = dynamic(() => import("../components/MapPane"), { ssr: false });
+import { geocode } from "../lib/geocode";
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+export default function Home() {
+  const [messages, setMessages] = useState<Msg[]>([
+    { role: "assistant", content: "Hi, I am Tripsy — how can I make you fall in love with our world?" },
+  ]);
+  const [input, setInput] = useState("");
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [pin, setPin] = useState<string | undefined>(undefined);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // auto-scroll chat
+  useEffect(() => {
+    boxRef.current?.scrollTo({ top: boxRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
+  async function send() {
+    const text = input.trim();
+    if (!text) return;
+
+    // optimistic UI
+    const next = [...messages, { role: "user", content: text } as Msg];
+    setMessages(next);
+    setInput("");
+
+    // try geocoding the user message to move the map
+    geocode(text).then((hit) => {
+      if (hit) {
+        setCenter({ lat: hit.lat, lng: hit.lng });
+        setPin(hit.display_name);
+      }
+    }).catch(() => {});
+
+    // call our Next API which forwards to FastAPI
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, history: next }),
+    });
+    const data = await res.json();
+    const answer = (data?.answer ?? "Hmm, I couldn't fetch that just now.").toString();
+    const withBot = [...next, { role: "assistant", content: answer } as Msg];
+    setMessages(withBot);
+
+    // also attempt geocoding the assistant reply (in case it names a place)
+    geocode(answer).then((hit) => {
+      if (hit) {
+        setCenter({ lat: hit.lat, lng: hit.lng });
+        setPin(hit.display_name);
+      }
+    }).catch(() => {});
+  }
+
+  return (
+    <main className="min-h-dvh bg-neutral-950 text-neutral-100">
+      <div className="mx-auto max-w-7xl p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {/* Chat panel */}
+        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/60 backdrop-blur">
+          <div className="p-4 text-2xl font-semibold text-emerald-400">Tripsy</div>
+          <div ref={boxRef} className="px-4 pb-4 max-h-[65dvh] overflow-y-auto space-y-3">
+            {messages.map((m, i) => (
+              <div key={i} className={`rounded-xl px-4 py-3 leading-relaxed ${m.role === "user" ? "bg-neutral-800 ml-auto max-w-[80%]" : "bg-neutral-850/70 border border-neutral-800 mr-auto max-w-[90%]"}`}>
+                {m.content}
+              </div>
+            ))}
+          </div>
+          <div className="p-4 flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder="Ask Tripsy anything…"
+              className="flex-1 rounded-xl bg-neutral-800/80 border border-neutral-700 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500/60"
+            />
+            <button
+              onClick={send}
+              className="px-4 py-3 rounded-xl bg-emerald-500 text-black font-semibold hover:bg-emerald-400"
+            >
+              Send
+            </button>
+          </div>
+        </section>
+
+        {/* Map panel */}
+        <section className="h-[78dvh]">
+          <MapPanePlus place="Amritsar, Golden Temple" center={center} label={pin} />
+        </section>
+      </div>
+    </main>
+  );
+}
