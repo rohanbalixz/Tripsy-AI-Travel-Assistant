@@ -79,7 +79,7 @@ npm install
 
 Run development server:
 ```bash
-NEXT_PUBLIC_TRIPSY_API="http://127.0.0.1:8012" WATCHPACK_POLLING=true npm run dev -- -p 3000
+NEXT_PUBLIC_TRIPSY_API="http://127.0.0.1:8012" WATCHPACK_POLLING=true npm run dev
 ```
 
 Open: [http://127.0.0.1:3000](http://127.0.0.1:3000)
